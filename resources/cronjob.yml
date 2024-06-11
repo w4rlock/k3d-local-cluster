@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob
+  namespace: ${KUBE_NAMESPACE}
+  labels:
+    app: playwright-cron
+  annotations:
+    description: "CronJob ${CI_PROJECT_NAME}"
+spec:
+  schedule: "*/5 * * * *"
+  successfulJobsHistoryLimit: 10
+  failedJobsHistoryLimit: 20
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 6000
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      activeDeadlineSeconds: 3200
+      template:
+        spec:
+          nodeSelector:
+            ${SELECTOR_ROLE}
+          containers:
+            - name: ${CI_PROJECT_NAME}
+              image: ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_IID}
+              imagePullPolicy: IfNotPresent
+          restartPolicy: OnFailure
